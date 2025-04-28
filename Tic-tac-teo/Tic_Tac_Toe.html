@@ -134,8 +134,14 @@
     let gameActive = true;
 
     // Working Sounds (Pixabay CDN)
-    const soundX = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_79956b2280.mp3?filename=correct-2-46134.mp3');
-    const soundO = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_416b5e87b5.mp3?filename=message-pop-2-46135.mp3');
+    const soundX = new Audio('sounds/click_x.mp3');
+const soundO = new Audio('sounds/click_o.mp3');
+soundX.volume = 1.0;
+soundO.volume = 1.0;
+soundX.preload = 'auto';
+soundO.preload = 'auto';
+
+
 
     // Initialize styles
     shells.forEach(shell => shell.classList.add(currentStyle));
