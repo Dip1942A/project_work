@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tic-Tac-Toe</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      min-height: 100vh;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: linear-gradient(to right, #000000, #053742);
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    h1 {
+      color: white;
+      margin-bottom: 20px;
+      text-shadow: 2px 2px 5px #00f7ff;
+    }
+    .btn-switch {
+      margin-bottom: 20px;
+      padding: 10px 20px;
+      background-color: #00f7ff;
+      color: #000;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: 0.3s ease;
+    }
+    .btn-switch:hover {
+      background-color: #00d9ff;
+      transform: scale(1.05);
+    }
+    .result {
+      margin: 10px;
+      padding: 8px 16px;
+      background: #fff;
+      color: #000;
+      font-weight: bold;
+      border-radius: 8px;
+    }
+    .container {
+      max-width: 90vmin;
+      width: 90%;
+      aspect-ratio: 1 / 1;
+      border-radius: 20px;
+      padding: 15px;
+      display: grid;
+      gap: 12px;
+    }
+    .game_box {
+      border-radius: 15px;
+      background: white;
+      cursor: pointer;
+      font-size: 48px;
+      font-weight: bold;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      user-select: none;
+      transition: all 0.3s ease;
+    }
+    /* Neon style */
+    .neon {
+      background: rgba(0, 0, 0, 0.9);
+      box-shadow: 0px 0px 10px #0ff, 0px 0px 20px #0ff, 0px 0px 30px #0ff;
+      color: #0ff;
+    }
+    .neon:hover {
+      box-shadow: 0px 0px 20px #0ff, 0px 0px 40px #0ff;
+      transform: scale(1.05);
+    }
+    /* Glass style */
+    .glass {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(10px);
+      color: #222;
+      box-shadow: 0px 0px 10px rgba(255,255,255,0.4);
+    }
+    .glass:hover {
+      box-shadow: 0px 0px 20px rgba(255,255,255,0.7);
+      transform: translateY(-3px);
+    }
+    /* Animations */
+    @keyframes pop {
+      0% { transform: scale(0.7); opacity: 0; }
+      50% { transform: scale(1.2); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+    .pop {
+      animation: pop 0.3s ease forwards;
+    }
+    @keyframes victory {
+      0% { background-color: #fff; }
+      100% { background-color: #fbbf24; }
+    }
+    .victory {
+      animation: victory 1s ease-in-out forwards;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Tic Tac Toe 🎯</h1>
+  <button class="btn-switch">Switch to Glass Style</button>
+  <div class="result" id="result"></div>
+  <div class="container" id="board"></div>
+
+  <script>
+    let n = parseInt(prompt('Enter row number of nxn matrix:', '3')) || 3;
+    const board = document.getElementById('board');
+    const resultDiv = document.getElementById('result');
+    const switchBtn = document.querySelector('.btn-switch');
+
+    board.style.gridTemplateColumns = `repeat(${n}, 1fr)`;
+    board.style.gridTemplateRows = `repeat(${n}, 1fr)`;
+
+    let html = '';
+    for (let i = 0; i < n * n; i++) {
+      html += `<div class="game_box"></div>`;
+    }
+    board.innerHTML = html;
+
+    const shells = document.querySelectorAll('.game_box');
+    let arr = Array.from({length: n}, () => Array(n).fill(null));
+    let currentStyle = 'neon';
+    let count = 0;
+    let gameActive = true;
+
+    // Working Sounds (Pixabay CDN)
+    const soundX = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_79956b2280.mp3?filename=correct-2-46134.mp3');
+    const soundO = new Audio('https://cdn.pixabay.com/download/audio/2022/03/15/audio_416b5e87b5.mp3?filename=message-pop-2-46135.mp3');
+
+    // Initialize styles
+    shells.forEach(shell => shell.classList.add(currentStyle));
+
+    // Switch Styles
+    switchBtn.addEventListener('click', () => {
+      if (currentStyle === 'neon') {
+        shells.forEach(shell => {
+          shell.classList.remove('neon');
+          shell.classList.add('glass');
+        });
+        currentStyle = 'glass';
+        switchBtn.textContent = 'Switch to Neon Style';
+      } else {
+        shells.forEach(shell => {
+          shell.classList.remove('glass');
+          shell.classList.add('neon');
+        });
+        currentStyle = 'neon';
+        switchBtn.textContent = 'Switch to Glass Style';
+      }
+    });
+
+    function check(row, col, currentsign) {
+      let win = true;
+
+      // Check row
+      for (let i = 0; i < n; i++) {
+        if (arr[row][i] !== currentsign) {
+          win = false;
+          break;
+        }
+      }
+      if (win) {
+        highlightRow(row);
+        resultDiv.textContent = `${currentsign} wins by row! 🎉`;
+        gameActive = false;
+        return;
+      }
+
+      // Check column
+      win = true;
+      for (let i = 0; i < n; i++) {
+        if (arr[i][col] !== currentsign) {
+          win = false;
+          break;
+        }
+      }
+      if (win) {
+        highlightColumn(col);
+        resultDiv.textContent = `${currentsign} wins by column! 🎉`;
+        gameActive = false;
+        return;
+      }
+
+      // Check main diagonal
+      if (row === col) {
+        win = true;
+        for (let i = 0; i < n; i++) {
+          if (arr[i][i] !== currentsign) {
+            win = false;
+            break;
+          }
+        }
+        if (win) {
+          highlightMainDiagonal();
+          resultDiv.textContent = `${currentsign} wins by main diagonal! 🎉`;
+          gameActive = false;
+          return;
+        }
+      }
+
+      // Check anti-diagonal
+      if (row + col === n - 1) {
+        win = true;
+        for (let i = 0; i < n; i++) {
+          if (arr[i][n - 1 - i] !== currentsign) {
+            win = false;
+            break;
+          }
+        }
+        if (win) {
+          highlightAntiDiagonal();
+          resultDiv.textContent = `${currentsign} wins by anti-diagonal! 🎉`;
+          gameActive = false;
+          return;
+        }
+      }
+
+      // Check draw
+      if (count === n * n) {
+        resultDiv.textContent = "It's a Draw!";
+        gameActive = false;
+      }
+    }
+
+    function highlightRow(row) {
+      for (let i = 0; i < n; i++) {
+        shells[row * n + i].classList.add('victory');
+      }
+    }
+    function highlightColumn(col) {
+      for (let i = 0; i < n; i++) {
+        shells[i * n + col].classList.add('victory');
+      }
+    }
+    function highlightMainDiagonal() {
+      for (let i = 0; i < n; i++) {
+        shells[i * n + i].classList.add('victory');
+      }
+    }
+    function highlightAntiDiagonal() {
+      for (let i = 0; i < n; i++) {
+        shells[i * n + (n - 1 - i)].classList.add('victory');
+      }
+    }
+
+    let currentsign = "X";
+    shells.forEach((shell, index) => {
+      shell.addEventListener('click', () => {
+        if (!gameActive) return;
+        if (shell.innerText.trim() === '') {
+          shell.innerHTML = `<p>${currentsign}</p>`;
+          shell.classList.add('pop');
+          let row = Math.floor(index / n);
+          let col = index % n;
+          arr[row][col] = currentsign;
+          count++;
+          if (currentsign === 'X') soundX.play();
+          else soundO.play();
+          if (count >= (2 * n - 1)) check(row, col, currentsign);
+          currentsign = (currentsign === 'X') ? 'O' : 'X';
+        } else {
+          alert('It is not empty 😡');
+        }
+      });
+    });
+  </script>
+
+</body>
+</html>
+
+
